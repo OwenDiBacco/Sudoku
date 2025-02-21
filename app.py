@@ -1,0 +1,3 @@
+from scrape_board_elements import find_grid_values_from_sudoku_webpage
+
+print(find_grid_values_from_sudoku_webpage())
