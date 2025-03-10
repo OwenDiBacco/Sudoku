@@ -2,13 +2,48 @@ import time
 import turtle
 import threading
 import tkinter as tk
+from PIL import Image, ImageDraw, ImageTk
 from scrape_board_elements import find_grid_values_from_sudoku_webpage
 
 class Board:
     def __init__(self, grid):
         self.grid = grid
         self.updated_cells = []
-    
+
+    def create_checkerboard_design(self, first_color, second_color): # colors must be in rgb
+        def create_grid_image(first_color, second_color):
+            width, height = 300, 300  
+            cell_width = width // 3
+            cell_height = height // 3
+
+            image = Image.new('RGB', (width, height), color='white')
+            draw = ImageDraw.Draw(image)
+
+            for row in range(3):
+                for col in range(3):
+                    color = first_color if (row + col) % 2 == 0 else second_color
+                    draw.rectangle([col * cell_width, row * cell_height,
+                                    (col + 1) * cell_width, (row + 1) * cell_height], fill=color)
+
+            image.save('background_image.jpg')
+
+        def display_background_image():
+            background_image = Image.open("background_image.jpg")
+
+            image_width = 474
+            image_height = 392 
+            background_image = background_image.resize((image_width, image_height), Image.Resampling.LANCZOS)
+
+            background_image = ImageTk.PhotoImage(background_image)
+
+            background_label = tk.Label(self.frame, image=background_image)
+            background_label.place(width=image_width, height=image_height)
+
+            background_label.image = background_image
+
+        create_grid_image(first_color, second_color)
+        display_background_image()
+
     def create_board_from_grid(self):
         for row in range(len(self.grid)):
             for col in range(len(self.grid[row])):
@@ -19,7 +54,11 @@ class Board:
         def change_cell_value(row, col, value):
             self.entries[row][col].delete(0, tk.END) 
             self.entries[row][col].insert(0, str(value))
-            
+        
+        red = (255, 0, 0)  
+        blue = (0, 0, 255) 
+        self.create_checkerboard_design(red, blue)
+
         for row in range(9):
             for col in range(9):
                 cell = self.grid[row][col]
@@ -31,9 +70,9 @@ class Board:
                     change_cell_value(row, col, cell.value)
 
     def update_cell(self, row, col):
-        if self.entries[row][col].get() == grid[row][col].value:
-            self.entries[row][col].config(bg="#00FF00")
-        else:
+        if self.entries[row][col].get() == self.grid[row][col].value:
+            self.entries[row][col].config(bg="green")
+        elif self.entries[row][col].get().strip():
             self.entries[row][col].config(bg="red")
 
     def initilize_board(self):
@@ -62,10 +101,8 @@ class Board:
         self.find_values_of_cells()
         self.create_board()
                 
-
     def display_board(self): 
         self.create_board()
-        print(self.updated_cells)
         self.root.mainloop()
 
     '''
@@ -150,13 +187,12 @@ def loading_icon():
     draw_spinner()
 
 grid = []
-## thread = threading.Thread(target=find_grid_values_from_sudoku_webpage, args=(grid, )) # must have an extra comma because the args parameter expects a tuple argument
-## thread.start()
 
-## loading_icon()
-## thread.join()
+thread = threading.Thread(target=find_grid_values_from_sudoku_webpage, args=(grid, )) # must have an extra comma because the args parameter expects a tuple argument
+thread.start()
 
-grid = [['', '', '', '', '1', '9', '', '', ''], ['6', '5', '', '3', '', '8', '', '', '4'], ['', '', '2', '6', '', '', '3', '', ''], ['2', '', '', '', '', '1', '4', '', '9'], ['3', '6', '', '9', '5', '4', '', '2', '1'], ['9', '', '1', '2', '', '', '', '', '6'], ['', '', '4', '', '', '3', '6', '', ''], ['5', '', '', '4', '', '2', '', '7', '8'], ['', '', '', '1', '7', '', '', '', '']]
+loading_icon()
+thread.join()
 
 board = Board(grid)
 board.initilize_board()
